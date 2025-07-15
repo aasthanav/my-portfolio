@@ -281,10 +281,10 @@ const Portfolio = () => {
               <Mail size={16} />
               aasthanavandar@gmail.com
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Phone size={16} />
               +91 8767753471
-            </div>
+            </div> */}
             <div className="flex items-center gap-2">
               <MapPin size={16} />
               Pune, 411037
