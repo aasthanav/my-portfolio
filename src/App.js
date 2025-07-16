@@ -1,9 +1,36 @@
-import React, { useState, useEffect } from 'react';
+
 import './App.css';  // Add this line if missing
 
-import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink, Award, Briefcase, GraduationCap, Code, User, Menu, X, Download, Calendar, Building, Home, FolderOpen, Trophy, Wrench, ChevronRight, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { Mail, Phone, MapPin, Linkedin, Github, ExternalLink, Award, Briefcase, GraduationCap, Code, User, Menu, X, Download, Calendar, Building, Home, FolderOpen, Trophy, Wrench, ChevronRight, ArrowLeft, Sun, Moon } from 'lucide-react';
+
+// Theme Context
+const ThemeContext = createContext();
+
+const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+const ThemeProvider = ({ children }) => {
+  const [isDark, setIsDark] = useState(true);
+
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+  };
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 const Portfolio = () => {
+  const { isDark } = useTheme();
   const [currentPage, setCurrentPage] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -155,9 +182,34 @@ const Portfolio = () => {
     }
   ];
 
+  // Theme Toggle Button Component
+  const ThemeToggle = () => {
+    const { isDark, toggleTheme } = useTheme();
+    
+    return (
+      <button
+        onClick={toggleTheme}
+        className={`p-2 rounded-lg transition-all duration-300 ${
+          isDark 
+            ? 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400' 
+            : 'bg-slate-700/20 hover:bg-slate-700/30 text-slate-700'
+        }`}
+        aria-label="Toggle theme"
+      >
+        {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      </button>
+    );
+  };
+
   // Navigation Component
   const Navigation = () => (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-900/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      isScrolled 
+        ? isDark 
+          ? 'bg-slate-900/95 backdrop-blur-lg shadow-lg' 
+          : 'bg-white/95 backdrop-blur-lg shadow-lg'
+        : 'bg-transparent'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <button
@@ -168,7 +220,7 @@ const Portfolio = () => {
           </button>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex items-center space-x-8">
             {pages.map((page) => {
               const Icon = page.icon;
               return (
@@ -176,7 +228,9 @@ const Portfolio = () => {
                   key={page.id}
                   onClick={() => navigateToPage(page.id)}
                   className={`flex items-center gap-2 transition-colors hover:text-purple-400 ${
-                    currentPage === page.id ? 'text-purple-400' : 'text-gray-300'
+                    currentPage === page.id 
+                      ? 'text-purple-400' 
+                      : isDark ? 'text-gray-300' : 'text-gray-700'
                   }`}
                 >
                   <Icon size={18} />
@@ -184,21 +238,31 @@ const Portfolio = () => {
                 </button>
               );
             })}
+            <ThemeToggle />
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Menu Button and Theme Toggle */}
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? 'hover:bg-white/10' : 'hover:bg-black/10'
+              }`}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-slate-900/95 backdrop-blur-lg border-t border-white/10">
+        <div className={`md:hidden backdrop-blur-lg border-t ${
+          isDark 
+            ? 'bg-slate-900/95 border-white/10' 
+            : 'bg-white/95 border-black/10'
+        }`}>
           <div className="px-4 py-2 space-y-2">
             {pages.map((page) => {
               const Icon = page.icon;
@@ -206,7 +270,9 @@ const Portfolio = () => {
                 <button
                   key={page.id}
                   onClick={() => navigateToPage(page.id)}
-                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors hover:bg-white/10 hover:text-purple-400"
+                  className={`flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors hover:text-purple-400 ${
+                    isDark ? 'hover:bg-white/10' : 'hover:bg-black/10'
+                  }`}
                 >
                   <Icon size={18} />
                   {page.label}
@@ -230,7 +296,11 @@ const Portfolio = () => {
       <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
         {title}
       </h1>
-      <p className="text-xl text-gray-300 max-w-3xl mx-auto">{subtitle}</p>
+      <p className={`text-xl max-w-3xl mx-auto ${
+        isDark ? 'text-gray-300' : 'text-gray-600'
+      }`}>
+        {subtitle}
+      </p>
     </div>
   );
 
@@ -247,11 +317,15 @@ const Portfolio = () => {
             Asthha Navandar
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className={`text-xl md:text-2xl mb-8 max-w-3xl mx-auto ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             B.Tech in Electronics and Telecommunication Engineering
           </p>
           
-          <p className="text-lg text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p className={`text-lg mb-12 max-w-4xl mx-auto leading-relaxed ${
+            isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             Recent B.Tech graduate with hands-on experience through internships at Bosch. 
             Skilled in Full-Stack Development, Generative AI, and Data Analytics. 
             Passionate about creating innovative solutions that drive digital transformation 
@@ -259,53 +333,35 @@ const Portfolio = () => {
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <a href="mailto:aasthanavandar@gmail.com" className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg transition-all hover:scale-105">
+            <a href="mailto:aasthanavandar@gmail.com" className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg transition-all hover:scale-105 text-white">
               <Mail size={20} />
               Contact Me
             </a>
-            <a href="https://linkedin.com/in/asthha-navandar-1a5288325" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all hover:scale-105">
+            <a href="https://linkedin.com/in/asthha-navandar-1a5288325" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-all hover:scale-105 text-white">
               <Linkedin size={20} />
               LinkedIn
             </a>
             <button 
               onClick={() => navigateToPage('projects')}
-              className="flex items-center gap-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-lg transition-all hover:scale-105"
+              className="flex items-center gap-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-lg transition-all hover:scale-105 text-white"
             >
               <FolderOpen size={20} />
               View Projects
             </button>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-6 text-gray-300 mb-12">
+          <div className={`flex flex-wrap justify-center gap-6 mb-12 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             <div className="flex items-center gap-2">
               <Mail size={16} />
               aasthanavandar@gmail.com
             </div>
-            {/* <div className="flex items-center gap-2">
-              <Phone size={16} />
-              +91 8767753471
-            </div> */}
             <div className="flex items-center gap-2">
               <MapPin size={16} />
               Pune, 411037
             </div>
           </div>
-
-          {/* Quick Stats */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20">
-              <div className="text-3xl font-bold text-purple-400 mb-2">2</div>
-              <div className="text-gray-300">Internships</div>
-            </div>
-            <div className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20">
-              <div className="text-3xl font-bold text-purple-400 mb-2">5+</div>
-              <div className="text-gray-300">Major Projects</div>
-            </div>
-            <div className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20">
-              <div className="text-3xl font-bold text-purple-400 mb-2">5+</div>
-              <div className="text-gray-300">Certifications</div> */}
-            {/* </div>
-          </div> */}
 
           {/* Education Section */}
           <div className="mt-20">
@@ -314,15 +370,25 @@ const Portfolio = () => {
             </h2>
             <div className="space-y-6">
               {education.map((edu, index) => (
-                <div key={index} className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                <div key={index} className={`backdrop-blur-lg rounded-xl p-6 border transition-all ${
+                  isDark 
+                    ? 'bg-slate-900/50 border-purple-500/20 hover:border-purple-500/40' 
+                    : 'bg-white/50 border-purple-500/30 hover:border-purple-500/50'
+                }`}>
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="mb-4 md:mb-0">
                       <h3 className="text-xl font-bold text-purple-400 mb-2">{edu.degree}</h3>
-                      <p className="text-gray-300 mb-1">{edu.institution}</p>
-                      <p className="text-gray-400">{edu.location}</p>
+                      <p className={`mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {edu.institution}
+                      </p>
+                      <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                        {edu.location}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-gray-400 mb-1">{edu.duration}</div>
+                      <div className={`mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {edu.duration}
+                      </div>
                       <div className="text-purple-400 font-semibold">{edu.grade}</div>
                     </div>
                   </div>
@@ -347,20 +413,30 @@ const Portfolio = () => {
         
         <div className="space-y-12">
           {experience.map((exp, index) => (
-            <div key={index} className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-8 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+            <div key={index} className={`backdrop-blur-lg rounded-xl p-8 border transition-all ${
+              isDark 
+                ? 'bg-slate-900/50 border-purple-500/20 hover:border-purple-500/40' 
+                : 'bg-white/50 border-purple-500/30 hover:border-purple-500/50'
+            }`}>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-purple-400 mb-2">{exp.title}</h3>
-                  <div className="flex items-center gap-2 text-gray-300 mb-2">
+                  <div className={`flex items-center gap-2 mb-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
                     <Building size={16} />
                     {exp.company}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-400">
+                  <div className={`flex items-center gap-2 ${
+                    isDark ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     <MapPin size={16} />
                     {exp.location}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-400 mt-4 md:mt-0">
+                <div className={`flex items-center gap-2 mt-4 md:mt-0 ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   <Calendar size={16} />
                   {exp.duration}
                 </div>
@@ -368,7 +444,9 @@ const Portfolio = () => {
               
               <ul className="space-y-3">
                 {exp.description.map((desc, i) => (
-                  <li key={i} className="flex items-start gap-3 text-gray-300">
+                  <li key={i} className={`flex items-start gap-3 ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
                     <ChevronRight size={16} className="text-purple-400 mt-1 flex-shrink-0" />
                     {desc}
                   </li>
@@ -393,7 +471,11 @@ const Portfolio = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
-            <div key={index} className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all hover:transform hover:scale-105">
+            <div key={index} className={`backdrop-blur-lg rounded-xl p-6 border transition-all hover:transform hover:scale-105 ${
+              isDark 
+                ? 'bg-slate-900/50 border-purple-500/20 hover:border-purple-500/40' 
+                : 'bg-white/50 border-purple-500/30 hover:border-purple-500/50'
+            }`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Code className="text-purple-400" size={20} />
@@ -408,12 +490,18 @@ const Portfolio = () => {
                 </span>
               </div>
               
-              <div className="flex items-center gap-2 text-gray-400 mb-4">
+              <div className={`flex items-center gap-2 mb-4 ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 <Calendar size={16} />
                 {project.duration}
               </div>
               
-              <p className="text-gray-300 mb-6 leading-relaxed">{project.description}</p>
+              <p className={`mb-6 leading-relaxed ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {project.description}
+              </p>
               
               <div className="flex flex-wrap gap-2">
                 {project.tech.map((tech, i) => (
@@ -441,7 +529,11 @@ const Portfolio = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Object.entries(skills).map(([category, skillList], index) => (
-            <div key={index} className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+            <div key={index} className={`backdrop-blur-lg rounded-xl p-6 border transition-all ${
+              isDark 
+                ? 'bg-slate-900/50 border-purple-500/20 hover:border-purple-500/40' 
+                : 'bg-white/50 border-purple-500/30 hover:border-purple-500/50'
+            }`}>
               <h3 className="text-xl font-bold text-purple-400 mb-4">{category}</h3>
               <div className="space-y-2">
                 {skillList.map((skill, i) => (
@@ -469,7 +561,11 @@ const Portfolio = () => {
         
         <div className="grid md:grid-cols-2 gap-8">
           {achievements.map((achievement, index) => (
-            <div key={index} className="bg-slate-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+            <div key={index} className={`backdrop-blur-lg rounded-xl p-6 border transition-all ${
+              isDark 
+                ? 'bg-slate-900/50 border-purple-500/20 hover:border-purple-500/40' 
+                : 'bg-white/50 border-purple-500/30 hover:border-purple-500/50'
+            }`}>
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-full ${
                   achievement.type === 'Competition' ? 'bg-yellow-600/20 text-yellow-400' :
@@ -489,7 +585,11 @@ const Portfolio = () => {
                       {achievement.type}
                     </span>
                   </div>
-                  <p className="text-gray-300 leading-relaxed">{achievement.description}</p>
+                  <p className={`leading-relaxed ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {achievement.description}
+                  </p>
                 </div>
               </div>
             </div>
@@ -512,30 +612,42 @@ const Portfolio = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className={`min-h-screen transition-all duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white' 
+        : 'bg-gradient-to-br from-gray-50 via-purple-50 to-gray-50 text-gray-900'
+    }`}>
       <Navigation />
       
       {renderPage()}
 
       {/* Footer */}
-      <footer className="py-12 bg-slate-900/80 border-t border-purple-500/20">
+      <footer className={`py-12 border-t transition-all duration-300 ${
+        isDark 
+          ? 'bg-slate-900/80 border-purple-500/20' 
+          : 'bg-white/80 border-purple-500/20'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Asthha Navandar
             </div>
-            <p className="text-gray-400 mb-6">
+            <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               B.Tech in Electronics and Telecommunication Engineering
             </p>
             <div className="flex justify-center space-x-6">
-              <a href="mailto:aasthanavandar@gmail.com" className="text-gray-400 hover:text-purple-400 transition-colors">
+              <a href="mailto:aasthanavandar@gmail.com" className={`transition-colors hover:text-purple-400 ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 <Mail size={24} />
               </a>
-              <a href="https://linkedin.com/in/asthha-navandar-1a5288325" className="text-gray-400 hover:text-purple-400 transition-colors">
+              <a href="https://linkedin.com/in/asthha-navandar-1a5288325" className={`transition-colors hover:text-purple-400 ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 <Linkedin size={24} />
               </a>
             </div>
-            <p className="text-gray-500 mt-6">
+            <p className={`mt-6 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               © 2025 Asthha Navandar. All rights reserved.
             </p>
           </div>
@@ -545,4 +657,12 @@ const Portfolio = () => {
   );
 };
 
-export default Portfolio;
+const App = () => {
+  return (
+    <ThemeProvider>
+      <Portfolio />
+    </ThemeProvider>
+  );
+};
+
+export default App;
